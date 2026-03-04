@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)file:///C:/Users/y-yanase.TAKSK/Downloads/index_5.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF コンプレッサー — PDFを無料で圧縮</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #5b8dee;
+      --accent2: #7b5ea7;
+      --green: #3ecf8e;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --text: #e8eaf0;
+      --muted: #8b90a8;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 16px 80px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+    .container { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 40px; }
+    .header-icon { font-size: 2.8rem; display: block; margin-bottom: 14px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+    .header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 700; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header p { margin-top: 8px; color: var(--muted); font-size: .88rem; }
+
+    /* Card */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; margin-bottom: 18px; }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 12px; padding: 44px 20px;
+      text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
+      background: var(--surface2); position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(91,141,238,.07); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon  { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+    .drop-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .drop-sub   { color: var(--muted); font-size: .82rem; }
+
+    /* File info */
+    .file-info { display: none; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-top: 14px; }
+    .file-info.show { display: flex; }
+    .file-info-icon { font-size: 1.5rem; }
+    .file-info-body { flex: 1; min-width: 0; }
+    .file-info-name { font-weight: 700; font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-info-size { color: var(--muted); font-size: .78rem; font-family: 'Space Mono', monospace; margin-top: 2px; }
+    .file-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 4px 6px; border-radius: 6px; transition: color .15s, background .15s; flex-shrink: 0; }
+    .file-remove:hover { color: var(--red); background: rgba(248,113,113,.1); }
+
+    /* Section label */
+    .section-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .82rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* Quality buttons */
+    .quality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .quality-btn { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 14px 8px; cursor: pointer; text-align: center; transition: border-color .2s, background .2s; color: var(--text); }
+    .quality-btn:hover { border-color: var(--accent); }
+    .quality-btn.active { border-color: var(--accent); background: rgba(91,141,238,.13); }
+    .q-icon { font-size: 1.4rem; display: block; margin-bottom: 6px; }
+    .q-name { font-weight: 700; font-size: .85rem; display: block; }
+    .q-desc { font-size: .72rem; color: var(--muted); margin-top: 3px; display: block; }
+
+    /* Quality detail row */
+    .quality-detail { margin-top: 12px; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: .8rem; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+    .quality-detail span { display: flex; align-items: center; gap: 5px; }
+
+    /* Input row */
+    .input-row { display: flex; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .2s; }
+    .input-row:focus-within { border-color: var(--accent); }
+    .input-row input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: .9rem; padding: 12px 14px; }
+    .input-suffix { padding: 12px 14px; color: var(--muted); font-size: .9rem; background: rgba(0,0,0,.25); user-select: none; flex-shrink: 0; }
+
+    /* Run button */
+    .run-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 12px; color: #fff; font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity .2s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; }
+    .run-btn:hover:not(:disabled) { opacity: .88; }
+    .run-btn:active:not(:disabled) { transform: scale(.99); }
+    .run-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Progress */
+    .progress-wrap { display: none; margin-top: 18px; }
+    .progress-wrap.show { display: block; }
+    .progress-bar-bg { background: var(--surface2); border-radius: 100px; height: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 100px; transition: width .3s ease; width: 0%; }
+    .progress-label { text-align: center; font-size: .82rem; color: var(--muted); margin-top: 8px; }
+
+    /* Error */
+    .error-msg { display: none; background: rgba(248,113,113,.1); border: 1px solid var(--red); border-radius: 10px; padding: 12px 16px; color: var(--red); font-size: .85rem; margin-top: 12px; }
+    .error-msg.show { display: block; }
+
+    /* Result card */
+    .result-card { display: none; background: var(--surface); border: 1px solid var(--green); border-radius: var(--radius); padding: 26px; margin-top: 18px; }
+    .result-card.show { display: block; }
+    .result-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: .95rem; color: var(--green); margin-bottom: 22px; }
+
+    /* Size comparison */
+    .size-compare { display: flex; align-items: stretch; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .size-block { flex: 1; padding: 20px 16px; text-align: center; }
+    .size-block + .size-block { border-left: 1px solid var(--border); }
+    .size-block-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+    .size-block-value { font-family: 'Space Mono', monospace; font-size: 1.35rem; font-weight: 700; line-height: 1; }
+    .size-block-value.col-before { color: var(--text); }
+    .size-block-value.col-after  { color: var(--accent); }
+    .size-arrow-wrap { display: flex; align-items: center; padding: 0 6px; color: var(--muted); font-size: 1.3rem; flex-shrink: 0; }
+
+    /* Reduction */
+    .reduction-wrap { margin-bottom: 20px; }
+    .reduction-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .reduction-title { font-size: .82rem; color: var(--muted); }
+    .reduction-pct { font-family: 'Space Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--green); }
+    .reduction-pct.bad { color: var(--yellow); }
+    .bar-track { background: var(--surface2); border-radius: 100px; height: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--green), #22c97a); transition: width .7s ease; }
+    .bar-fill.bad { background: linear-gradient(90deg, var(--yellow), #f59e0b); }
+
+    /* Badge */
+    .saved-badge { display: inline-block; padding: 5px 14px; background: rgba(62,207,142,.12); border: 1px solid rgba(62,207,142,.3); border-radius: 100px; font-size: .8rem; color: var(--green); font-family: 'Space Mono', monospace; margin-bottom: 20px; }
+    .saved-badge.bad { background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.3); color: var(--yellow); }
+
+    /* Page info */
+    .page-info { font-size: .78rem; color: var(--muted); margin-bottom: 16px; }
+
+    /* Download */
+    .dl-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: var(--green); border: none; border-radius: 10px; color: #0f1117; font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: .95rem; cursor: pointer; transition: opacity .2s; text-decoration: none; }
+    .dl-btn:hover { opacity: .85; }
+
+    /* Footer */
+    .footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: .76rem; line-height: 1.9; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* Notice */
+    .notice { background: rgba(91,141,238,.08); border: 1px solid rgba(91,141,238,.25); border-radius: 10px; padding: 10px 14px; font-size: .78rem; color: var(--muted); margin-top: 12px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="header-icon">🗜️</span>
+    <h1>PDF コンプレッサー</h1>
+    <p>各ページをJPEG再圧縮してファイルサイズを大幅削減</p>
+  </div>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".pdf">
+      <span class="drop-icon">📄</span>
+      <div class="drop-title">ここにPDFをドロップ</div>
+      <div class="drop-sub">またはクリックしてファイルを選択</div>
+    </div>
+    <div class="file-info" id="fileInfo">
+      <span class="file-info-icon">📋</span>
+      <div class="file-info-body">
+        <div class="file-info-name" id="fileName">—</div>
+        <div class="file-info-size" id="fileSizeLabel">—</div>
+      </div>
+      <button class="file-remove" id="removeBtn" title="削除">✕</button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Quality -->
+  <div class="card">
+    <div class="section-label">🎚️ 圧縮レベル</div>
+    <div class="quality-grid">
+      <button class="quality-btn" data-level="low">
+        <span class="q-icon">⚡</span>
+        <span class="q-name">軽圧縮</span>
+        <span class="q-desc">高画質</span>
+      </button>
+      <button class="quality-btn active" data-level="medium">
+        <span class="q-icon">⚖️</span>
+        <span class="q-name">標準</span>
+        <span class="q-desc">バランス</span>
+      </button>
+      <button class="quality-btn" data-level="high">
+        <span class="q-icon">🗜️</span>
+        <span class="q-name">高圧縮</span>
+        <span class="q-desc">最小サイズ</span>
+      </button>
+    </div>
+    <div class="quality-detail" id="qualityDetail">
+      <span>🖼️ JPEG品質: <b id="detailQuality">0.75 (標準)</b></span>
+      <span>📐 解像度スケール: <b id="detailScale">1.5x (108 dpi相当)</b></span>
+      <span>📋 方式: ページ画像化→再圧縮</span>
+    </div>
+    <div class="notice">
+      ℹ️ 各ページをCanvasで描画してJPEG圧縮します。<b>画像・スキャンPDFで特に効果的</b>です。テキストの検索・コピーは非対応になります。
+    </div>
+  </div>
+
+  <!-- Output name -->
+  <div class="card">
+    <div class="section-label">💾 出力ファイル名</div>
+    <div class="input-row">
+      <input type="text" id="outputName" placeholder="compressed" value="compressed">
+      <span class="input-suffix">.pdf</span>
+    </div>
+  </div>
+
+  <button class="run-btn" id="runBtn" disabled="">🗜️ PDFを圧縮実行</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel">処理中...</div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="resultCard">
+    <div class="result-title">✅ 圧縮完了！ダウンロードしてください。</div>
+
+    <div class="size-compare">
+      <div class="size-block">
+        <div class="size-block-label">📁 圧縮前</div>
+        <div class="size-block-value col-before" id="statBefore">—</div>
+      </div>
+      <div class="size-arrow-wrap">→</div>
+      <div class="size-block">
+        <div class="size-block-label">📦 圧縮後</div>
+        <div class="size-block-value col-after" id="statAfter">—</div>
+      </div>
+    </div>
+
+    <div class="reduction-wrap">
+      <div class="reduction-header">
+        <span class="reduction-title">削減率</span>
+        <span class="reduction-pct" id="statPct">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="statBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="saved-badge" id="savedBadge">—</div>
+    <div class="page-info" id="pageInfo"></div>
+
+    <a class="dl-btn" id="dlBtn" href="file:///C:/Users/y-yanase.TAKSK/Downloads/index_5.html#" download="">📥 圧縮PDFをダウンロード</a>
+  </div>
+
+  <div class="footer">
+    🔒 すべての処理はブラウザ内で完結します。ファイルはサーバーに送信されません。<br>
+    Powered by <a href="https://mozilla.github.io/pdf.js/" target="_blank">PDF.js</a> &amp;
+    <a href="https://pdf-lib.js.org/" target="_blank">pdf-lib</a>
+  </div>
+</div>
+
+<!-- pdf-lib -->
+<script src="./PDF コンプレッサー — PDFを無料で圧縮_files/pdf-lib.min.js.ダウンロード"></script>
+<!-- PDF.js -->
+<script src="./PDF コンプレッサー — PDFを無料で圧縮_files/pdf.min.js.ダウンロード"></script>
+<script>
+  // PDF.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const { PDFDocument } = PDFLib;
+
+  // Quality presets: [jpegQuality 0-1, renderScale]
+  const PRESETS = {
+    low:    { quality: 0.92, scale: 2.0, label: '0.92 (高画質)', scaleLabel: '2.0x (144 dpi相当)' },
+    medium: { quality: 0.75, scale: 1.5, label: '0.75 (標準)',   scaleLabel: '1.5x (108 dpi相当)' },
+    high:   { quality: 0.50, scale: 1.2, label: '0.50 (高圧縮)', scaleLabel: '1.2x (86 dpi相当)'  },
+  };
+
+  let selectedFile  = null;
+  let compressLevel = 'medium';
+
+  const $ = id => document.getElementById(id);
+  const dropZone      = $('dropZone');
+  const fileInput     = $('fileInput');
+  const fileInfoEl    = $('fileInfo');
+  const fileNameEl    = $('fileName');
+  const fileSizeLbl   = $('fileSizeLabel');
+  const removeBtn     = $('removeBtn');
+  const errorMsgEl    = $('errorMsg');
+  const runBtn        = $('runBtn');
+  const progressWrap  = $('progressWrap');
+  const progressBar   = $('progressBar');
+  const progressLabel = $('progressLabel');
+  const resultCard    = $('resultCard');
+  const statBefore    = $('statBefore');
+  const statAfter     = $('statAfter');
+  const statPct       = $('statPct');
+  const statBar       = $('statBar');
+  const savedBadge    = $('savedBadge');
+  const pageInfo      = $('pageInfo');
+  const dlBtn         = $('dlBtn');
+  const outputName    = $('outputName');
+  const detailQuality = $('detailQuality');
+  const detailScale   = $('detailScale');
+
+  function formatBytes(b) {
+    if (b < 1024)      return b + ' B';
+    if (b < 1048576)   return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(2) + ' MB';
+  }
+  function showError(msg) {
+    errorMsgEl.textContent = msg;
+    errorMsgEl.classList.toggle('show', !!msg);
+  }
+  function setProgress(pct, label) {
+    progressBar.style.width   = pct + '%';
+    progressLabel.textContent = label;
+  }
+  function updateQualityDetail() {
+    const p = PRESETS[compressLevel];
+    detailQuality.textContent = p.label;
+    detailScale.textContent   = p.scaleLabel;
+  }
+  updateQualityDetail();
+
+  // Quality buttons
+  document.querySelectorAll('.quality-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      compressLevel = btn.dataset.level;
+      updateQualityDetail();
+    });
+  });
+
+  // Drag & drop
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0]; if (f) handleFile(f);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+  removeBtn.addEventListener('click', () => {
+    selectedFile = null;
+    fileInfoEl.classList.remove('show');
+    fileInput.value = '';
+    runBtn.disabled = true;
+    resultCard.classList.remove('show');
+    progressWrap.classList.remove('show');
+    showError('');
+  });
+
+  function handleFile(f) {
+    if (!f.name.toLowerCase().endsWith('.pdf')) {
+      showError('PDFファイルのみ対応しています。'); return;
+    }
+    selectedFile = f;
+    fileNameEl.textContent  = f.name;
+    fileSizeLbl.textContent = formatBytes(f.size);
+    fileInfoEl.classList.add('show');
+    runBtn.disabled = false;
+    resultCard.classList.remove('show');
+    progressWrap.classList.remove('show');
+    showError('');
+    outputName.value = f.name.replace(/\.pdf$/i, '') + '_compressed';
+  }
+
+  // ── Canvas → JPEG blob helper ──
+  function canvasToJpegBlob(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas toBlob failed'));
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  // ── Main compression ──
+  runBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    runBtn.disabled = true;
+    resultCard.classList.remove('show');
+    progressWrap.classList.add('show');
+    showError('');
+    setProgress(2, 'PDFを読み込み中...');
+
+    try {
+      const originalBuffer = await selectedFile.arrayBuffer();
+      const originalSize   = originalBuffer.byteLength;
+      const preset = PRESETS[compressLevel];
+
+      // ── 1. Load with PDF.js for rendering ──
+      setProgress(8, 'PDF.jsで解析中...');
+      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(originalBuffer) });
+      const pdfJsDoc    = await loadingTask.promise;
+      const numPages    = pdfJsDoc.numPages;
+
+      // ── 2. Create new PDF with pdf-lib ──
+      const outDoc = await PDFDocument.create();
+
+      const canvas  = document.createElement('canvas');
+      const ctx     = canvas.getContext('2d');
+
+      for (let i = 1; i <= numPages; i++) {
+        const pct = 8 + Math.round((i - 1) / numPages * 82);
+        setProgress(pct, `ページ ${i} / ${numPages} を処理中...`);
+
+        // Render page to canvas
+        const page     = await pdfJsDoc.getPage(i);
+        const viewport = page.getViewport({ scale: preset.scale });
+
+        canvas.width  = viewport.width;
+        canvas.height = viewport.height;
+
+        // White background (JPEG has no transparency)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        // Canvas → JPEG blob → ArrayBuffer
+        const blob    = await canvasToJpegBlob(canvas, preset.quality);
+        const imgData = await blob.arrayBuffer();
+
+        // Embed JPEG into pdf-lib
+        const jpgImage = await outDoc.embedJpg(imgData);
+        const { width: jpgW, height: jpgH } = jpgImage.scale(1);
+
+        // Add page with same physical size as original viewport (72 dpi base)
+        const pdfPage = outDoc.addPage([viewport.width / preset.scale, viewport.height / preset.scale]);
+        pdfPage.drawImage(jpgImage, {
+          x: 0, y: 0,
+          width:  pdfPage.getWidth(),
+          height: pdfPage.getHeight(),
+        });
+      }
+
+      setProgress(92, 'PDFを保存中...');
+      const outBytes       = await outDoc.save({ useObjectStreams: true });
+      const compressedSize = outBytes.byteLength;
+
+      setProgress(100, '完了！');
+      await new Promise(r => setTimeout(r, 300));
+      progressWrap.classList.remove('show');
+
+      // ── Show results ──
+      const savedBytes = originalSize - compressedSize;
+      const pctNum     = (savedBytes / originalSize) * 100;
+      const reduced    = savedBytes > 0;
+
+      statBefore.textContent = formatBytes(originalSize);
+      statAfter.textContent  = formatBytes(compressedSize);
+
+      statPct.textContent = (reduced ? '-' : '+') + Math.abs(pctNum).toFixed(1) + '%';
+      statPct.className   = 'reduction-pct' + (reduced ? '' : ' bad');
+
+      statBar.style.width = Math.min(Math.abs(pctNum), 100).toFixed(1) + '%';
+      statBar.className   = 'bar-fill' + (reduced ? '' : ' bad');
+
+      if (reduced) {
+        savedBadge.textContent = '✅ ' + formatBytes(savedBytes) + ' 削減しました';
+        savedBadge.className   = 'saved-badge';
+      } else {
+        savedBadge.textContent = '⚠️ ' + formatBytes(Math.abs(savedBytes)) + ' 増加しました（元のファイルを使用推奨）';
+        savedBadge.className   = 'saved-badge bad';
+      }
+
+      pageInfo.textContent = `📄 処理ページ数: ${numPages} ページ　／　JPEG品質: ${(preset.quality * 100).toFixed(0)}%　／　レンダリングスケール: ${preset.scale}x`;
+
+      const blob     = new Blob([outBytes], { type: 'application/pdf' });
+      dlBtn.href     = URL.createObjectURL(blob);
+      dlBtn.download = (outputName.value.trim() || 'compressed') + '.pdf';
+
+      resultCard.classList.add('show');
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+      progressWrap.classList.remove('show');
+      showError('エラーが発生しました: ' + err.message);
+      console.error(err);
+    }
+
+    runBtn.disabled = false;
+  });
+</script>
+
+
+</body></html>
